@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using _808GW.Model;
 using JX;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,29 @@ namespace _808GW.Controllers
             if (Program.task.dic809Vehicle.TryGetValue(key, out var dev))
             {
                 return dev.Sim;
+            }
+            return null;
+        }
+        public string SendTextMsg(string Sim, byte Flag, string Text)
+        {
+            return Program.task.SendTextMsgToDev(Sim, Flag, Text);
+        }
+
+
+        public string GetDeviceInfo(string Sim)
+        {
+            try
+            {
+                var cj = Program.task.GetChejiByClientPool(Sim);
+                if (cj != null)
+                    return new ApiDevInfo
+                    {
+                        DeviceInfo = cj.DevInfo,
+                        AVParameters = cj.AvParameters,
+                    }.ToJson();
+            }
+            catch (Exception)
+            {
             }
             return null;
         }
