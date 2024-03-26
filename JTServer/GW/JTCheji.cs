@@ -348,6 +348,21 @@ namespace JTServer.GW
         #region 公共
 
         /// <summary>
+        /// 发送离线指令
+        /// </summary>
+        private void SendOfflineCmds()
+        {
+            if (cl.MyTask.dicOfflineCmds.TryRemove(SimKey, out var dit))
+            {
+                var cmds = dit.Values.ToArray();
+                foreach (var cmd in cmds)
+                {
+                    var jtpd = jtdata.Package(cmd.MsgId, SimKey, cmd.JTData.GetBinaryData());
+                    SendData_Active(jtpd);
+                }
+            }
+        }
+        /// <summary>
         /// 平台通用应答
         /// </summary>
         /// <param name="head"></param>
@@ -872,6 +887,11 @@ namespace JTServer.GW
         #region 协议解析
         public void JXData(JTHeader head, byte[] bGps)
         {
+            //被禁用SIM直接返回不响应
+            if (cl.MyTask.Config.BanSims.Contains(head.Sim))
+            {
+                return;
+            }
             jtdata.Is2019 = head.Is2019;
             if (cl.MyTask.Config.CanRegSecond)
             {
@@ -1203,6 +1223,8 @@ namespace JTServer.GW
                 AuthorityTime = LastHeart = DateTime.Now;
                 EnterpriseCode = 0;
                 SendAnswer(jtdata.Package(0x9003, head.Sim));
+                
+                SendOfflineCmds();
             }
             else
             {
